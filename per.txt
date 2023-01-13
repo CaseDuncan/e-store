@@ -1,0 +1,155 @@
+
+
+    I wanted to return the percentage of every poll options_data in response.
+    I'm Expecting output Like in below.
+
+{
+    "response": true,
+    "return_code": "remove_vote_success",
+    "result": {
+        "id": 9,
+        "user_id": 2,
+        "question": "what would you like to see more of on our channel?",
+        "created_on": "2022-09-06T05:52:39",
+        "active": true,
+        "options_data": [
+            {
+                "id": 25,
+                "poll_id": 9,
+                "option_text": "Video editing tutorials",
+                "percentage_count": 50.0
+            },
+            {
+                "id": 26,
+                "poll_id": 9,
+                "option_text": "Clipchamp product updates",
+                "percentage_count": 10.0
+            },
+            {
+                "id": 27,
+                "poll_id": 9,
+                "option_text": "Social media growth tips"
+                "percentage_count": 40.0
+            },
+            {
+                "id": 28,
+                "poll_id": 9,
+                "option_text": "Clipchamp tips and tricks",
+                "percentage_count": 0.0
+            }
+        ]
+    },
+    "message": "Vote get successfully."
+}
+
+    this is my models.py
+
+class Polls(models.Model):
+    user = models.ForeignKey(User, related_name="polls_data", on_delete=models.CASCADE)
+    question = models.TextField(max_length=250, blank=False, null=False)
+    created_on = models.DateTimeField(default=timezone.now)
+    active = models.BooleanField(default=True)
+
+
+class Options(models.Model):
+    poll = models.ForeignKey(Polls, related_name="options_data", on_delete=models.CASCADE)
+    option_text = models.CharField(max_length=255)
+
+
+class Vote(models.Model):
+    user = models.ForeignKey(User, related_name="vote_data", on_delete=models.CASCADE)
+    poll = models.ForeignKey(Polls, on_delete=models.CASCADE)
+    option = models.ForeignKey(Options, on_delete=models.CASCADE)
+
+    this is my serializer.py
+
+class OptionsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Options
+        fields = ('id', 'poll_id', 'option_text')
+
+class PollsSerializer(serializers.ModelSerializer):
+    
+    options_data = OptionsSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Polls
+        fields = ('id','user_id', 'question', 'created_on', 'active',  'options_data')
+
+    pythondjangodjango-rest-frameworkdjango-serializerdrf-spectacular
+
+Share
+Improve this question
+Follow
+asked Sep 6 at 13:37
+MdHassan413's user avatar
+MdHassan413
+5377 bronze badges
+Add a comment
+2 Answers
+Sorted by:
+1
+
+In your OptionsSerializeradd a field that takes the .count() of the option in question and divide by the count() of all answers for that question. (then multiply that by 100 to get to percentage)
+
+class OptionsSerializer(serializers.ModelSerializer):
+    percentage_count = serializers.SerializerMethodField()
+
+    ...
+
+    def get_percentage_count(self, obj): 
+       total_votes = Vote.objects.filter(poll=obj.poll).count()
+       share_of_votes = Vote.objects.filter(option=obj).count()
+       return Decimal(
+           (share_of_answers / total) * 100
+       ).quantize(Decimal('.01'))
+
+Share
+Improve this answer
+Follow
+edited Sep 6 at 13:53
+answered Sep 6 at 13:45
+krs's user avatar
+krs
+4,0761919 silver badges2222 bronze badges
+Add a comment
+1
+
+if we return values direct in response there maybe you will face ZeroDivisionError. so for code efficiency use this.
+
+class OptionsSerializer(serializers.ModelSerializer):
+
+    percentage_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Options
+        fields = ('id', 'poll_id', 'option_text', 'percentage_count')
+
+    def get_percentage_count(self, obj): 
+       total_votes = Vote.objects.filter(poll_id=obj.poll).count()
+       share_of_votes = Vote.objects.filter(option_id=obj).count()
+       try:
+            percentage = Decimal((share_of_votes / total_votes) * 100).quantize(Decimal('.01'))
+       except ZeroDivisionError:
+            return 0 
+       return percentage
+
+class PollsSerializer(serializers.ModelSerializer):
+    
+    options_data = OptionsSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Polls
+        fields = ('id','user_id', 'question', 'created_on', 'active',  'options_data')
+
+Share
+Improve this answer
+Follow
+answered Sep 7 at 13:00
+MdHassan413's user avatar
+MdHassan413
+5377 bronze badges
+
+    1
+    To improve performance a little little bit you can short circuit and return zero after the first row if total_votes is 0 to avoid hitting the database to get share_of_votes 
