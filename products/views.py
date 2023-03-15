@@ -6,12 +6,11 @@ from users.serializers import UserSerializerWithToken, UserSerializer
 from products.serializers import ProductSerializer, OrderSerializer
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework import status
-from django.db.models import Sum
-from datetime import datetime
-import pytz
+from django.db.models import Sum, Q
+import datetime
 
 # Create your views here.
-@api_view(["GET", "POST"])
+@api_view(["GET"])
 def getProducts(request):
     # if request.method == "GET":
     products = Product.objects.all()
@@ -36,7 +35,7 @@ def getProducts(request):
 
 
 @api_view(["POST"])
-@permission_classes([IsAdminUser])
+# @permission_classes([IsAdminUser])
 def create_product(request):
     user = request.user
     data = request.data
@@ -154,17 +153,14 @@ def fetch_order_details(request, pk):
 # sales made today
 @api_view(["GET"])
 def todays_sales(request):
-    date = datetime.today()
-    timezone_aware_date = pytz.utc.localize(date)
-    print("time:", timezone_aware_date)
-    orders = Order.objects.filter(date__lte=date)
+    orders = Order.objects.filter(date__gte= datetime.date.today())
     serializer = OrderSerializer(orders, many=True)
     return Response(serializer.data)
 
 
 # content for dashboard home
 @api_view(["GET"])
-@permission_classes([IsAdminUser])
+# @permission_classes([IsAdminUser])
 def dashboard_content(request):
     sales = Order.objects.filter(isPaid=True).aggregate(total_sales=Sum("total_price"))
     users = User.objects.filter(is_staff=True)
@@ -181,7 +177,7 @@ def dashboard_content(request):
 
 
 @api_view(["GET"])
-@permission_classes([IsAdminUser])
+# @permission_classes([IsAdminUser])
 def sales_analysis(request):
     phones = OrderItem.objects.filter(product__category="Phones").aggregate(
         total_sales_phones=Sum("price")
@@ -189,10 +185,6 @@ def sales_analysis(request):
     electronics = OrderItem.objects.filter(product__category="Electronics").aggregate(
         total_sales_electronics=Sum("price")
     )
-    # watches = Order.objects.filter(category="electronics").aggregate(total_sales_watches=Sum("total_price"))
-    # clothing =Order.objects.filter(category="clothing").aggregate(total_sales_clothing=Sum("total_price"))
-    # shoes = Order.objects.filter(category="shoes").aggregate(total_sales_shoes=Sum("total_price"))
-    # jewellery =Order.objects.filter(category="jewellery").aggregate(total_sales_jewellery=Sum("total_price"))
     return Response(
         {
             "phones": phones,
@@ -208,7 +200,7 @@ def sales_analysis(request):
 # product rating
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def create_product_rating(request, pk):
+def create_product_review(request, pk):
     user = request.user
     data = request.data
     product = Product.objects.get(id=pk)
@@ -219,7 +211,7 @@ def create_product_rating(request, pk):
         message = {"error": "product already reviewed"}
         return Response(message, status=status.HTTP_400_BAD_REQUEST)
 
-    # check if rating provided is greater than zero
+    # check if rating provided is greater than zero or not
     elif data["rating"] == 0:
         message = {"error": "product review should be between 1-5"}
         return Response(message, status=status.HTTP_400_BAD_REQUEST)

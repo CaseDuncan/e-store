@@ -16,9 +16,8 @@ SECRET_KEY = 'django-insecure-&#e2m3jjbauypy!uklbi!5+r&!&3@xq22#z$(v8!4z8m*wgo-a
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
-DEBUG = False
-
-ALLOWED_HOSTS = ['localhost', 'case.pythonanywhere.com']
+DEBUG =True
+ALLOWED_HOSTS = ['localhost','http://localhost:5173','http://127.0.0.1:8000', 'case.pythonanywhere.com']
 
 
 # Application definition
@@ -166,14 +165,11 @@ STATIC_URL = '/static/'
 
 MEDIA_URL = '/images/'
 
-STATICFILES_DIRS =[
-    BASE_DIR / 'static',
-    BASE_DIR / 'client/dist/assets'
-]
-# STATICFILES_DIR = [
-#     os.path.join(BASE_DIR, 'client/dist/assets')
+# STATICFILES_DIRS =[
+#     BASE_DIR / 'static',
+#     BASE_DIR / 'client/dist/assets'
 # ]
-# STATIC_ROOT = BASE_DIR/"static/"
+
 MEDIA_ROOT='static/images'
 
 
