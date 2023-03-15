@@ -1,0 +1,7 @@
+.cart-disabled{
+    cursor:not-allowed !important;
+    background-color: #ddd;
+    color: #000;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
