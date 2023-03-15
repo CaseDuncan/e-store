@@ -1,0 +1,19 @@
+import { CircularProgressbar } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
+Note: Importing CSS requires a CSS loader (if you're using create-react-app, this is already set up for you). If you don't have a CSS loader, you can copy styles.css into your project instead.
+
+Now you can use the component:
+
+const percentage = 66;
+
+<CircularProgressbar value={percentage} text={`${percentage}%`} />;
+If your values are not in percentages, you can adjust minValue and maxValue to select the scale you want:
+
+const value = 0.66;
+
+<CircularProgressbar value={value} maxValue={1} text={`${value * 100}%`} />;
+The progressbar is designed to fill the width of its container. You can size the progressbar by sizing its container:
+
+<div style={{ width: 200, height: 200 }}>
+  <CircularProgressbar value={66} />
+</div>
