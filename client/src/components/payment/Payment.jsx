@@ -1,15 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { PayPalButton } from "react-paypal-button-v2";
+import React, { useState } from "react";
+import { useSelector } from "react-redux";
 import { toast } from 'react-toastify'
 import Header from "../header/Header";
 import mpesaImage from '../../assets/mpesa.png'
 
 const Payment = () => {
   const[mpesaNumber, setmpesaNumber] = useState('')
-  const { checkoutInformation } = useSelector((state) => state.checkout);
-  const { error, success, message } = useSelector((state) => state.orders);
   const { cartItems, totalQuantity } = useSelector(
     (state) => state.productCart
   );
@@ -30,27 +26,7 @@ const Payment = () => {
     Number(tax_price) +
     Number(amountPayable)
   ).toFixed(2);
-  const [sdkReady, setSdkReady] = useState(false);
-
-  // clinetId :ARmTvB2UaHQJk9haVudeypKFMfc6orlHouyrddydXh4QFMqq75Z8YP-9N9X2VzOAvaMejtYuDi_t-M8H
-  const createPayPalButton = () => {
-    let script = document.createElement("script");
-    script.type = "text/javascript";
-    script.src =
-      "https://www.paypal.com/sdk/js?client-id=ARmTvB2UaHQJk9haVudeypKFMfc6orlHouyrddydXh4QFMqq75Z8YP-9N9X2VzOAvaMejtYuDi_t-M8H";
-    script.async = true;
-    script.onload = () => {
-      setSdkReady(true);
-    };
-    document.body.appendChild(script);
-  };
-
-  useEffect(() => {
-    if (!window.paypal) {
-      createPayPalButton();
-    }
-  });
-
+  
   // trigger mpesa API call
   const MpesaAPICall = (e) => {
     e.preventDefault()
@@ -87,10 +63,6 @@ const Payment = () => {
                 Amount Payable: {total_price}
               </li>
             </ul>
-          </div>
-          {/* payment paypal */}
-          <div className="col-md-3 offset-md-2 mt-5">
-            <PayPalButton amount={total_price} />
           </div>
           {/* payment mpesa */}
           <div className="col-md-3 mt-3">
